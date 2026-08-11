@@ -1,5 +1,10 @@
-data/
-/node_modules/
-/.idea/
-*.map
-*.js
+# Local Claude Code config, not shared with the repo
+/CLAUDE.md
+
+# Go build artifacts
+/confluence-to-markdown
+/confluence-to-markdown-gui
+*.test
+
+# OS junk
+.DS_Store
