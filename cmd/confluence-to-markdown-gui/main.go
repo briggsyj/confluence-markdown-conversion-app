@@ -87,7 +87,10 @@ func main() {
 
 		convertBtn.Disable()
 		status.SetText("Converting...")
-		progress := dialog.NewProgressInfinite("Converting", "Converting the Confluence export to Markdown...", w)
+		progress := dialog.NewCustomWithoutButtons("Converting", container.NewVBox(
+			widget.NewLabel("Converting the Confluence export to Markdown..."),
+			widget.NewProgressBarInfinite(),
+		), w)
 		progress.Show()
 
 		opts := runOptions{

@@ -248,10 +248,9 @@ func renderDecisionList(ctx converter.Context, w converter.Writer, list *html.No
 // Confluence's purple panel) that have no legacy ac:structured-macro
 // equivalent to round-trip through.
 func renderAdfPanel(ctx converter.Context, w converter.Writer, node *html.Node) {
-	panelType := adfAttribute(node, "panel-type")
-	label := strings.ToUpper(panelType[:min(1, len(panelType))]) + panelType[min(1, len(panelType)):]
-	if label == "" {
-		label = "Note"
+	label := "Note"
+	if panelType := adfAttribute(node, "panel-type"); panelType != "" {
+		label = strings.ToUpper(panelType[:1]) + panelType[1:]
 	}
 	content := directChild(node, "ac:adf-content")
 	text := ""

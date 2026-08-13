@@ -11,7 +11,6 @@
 package api
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -40,6 +39,8 @@ type Config struct {
 	SpaceKey string
 }
 
+// pageLimit is the page size for the paginated space-pages and per-page
+// attachment listings; 100 is the Confluence Cloud v2 API's maximum.
 const pageLimit = 100
 
 // Source pulls a single Confluence space's pages via the REST API.
@@ -212,11 +213,17 @@ func (s *Source) downloadAttachments(ctx context.Context, pageID int, tmpDir str
 	return attachments, nil
 }
 
+// writeReaderToFile streams rc to path (closing rc when done), rather than
+// buffering the whole attachment in memory first.
 func writeReaderToFile(rc io.ReadCloser, path string) error {
 	defer rc.Close()
-	var buf bytes.Buffer
-	if _, err := io.Copy(&buf, rc); err != nil {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
+	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, buf.Bytes(), 0o644)
+	if _, err := io.Copy(f, rc); err != nil {
+		f.Close()
+		return err
+	}
+	return f.Close()
 }

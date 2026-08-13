@@ -26,6 +26,8 @@ type Source struct {
 	RootPath string
 }
 
+// New returns a Source that reads pages from the export directory (or single
+// export HTML file) at rootPath.
 func New(rootPath string) *Source {
 	return &Source{RootPath: rootPath}
 }

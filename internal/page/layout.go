@@ -1,6 +1,9 @@
 package page
 
-import "regexp"
+import (
+	"regexp"
+	"strings"
+)
 
 // sanitizePattern matches the exact character set legacy-cs's
 // Utils.sanitizeFilename replaces: whitespace plus the Windows-reserved
@@ -47,14 +50,11 @@ func ConfluenceIDFromBasename(basename string) (string, bool) {
 // (breadcrumb parsing for the export source, the ancestors list for the API
 // source) and happens before this call.
 func LocalDirFromSegments(segments []string) string {
-	dir := ""
+	sanitized := make([]string, len(segments))
 	for i, s := range segments {
-		if i > 0 {
-			dir += "/"
-		}
-		dir += SanitizeFilename(s)
+		sanitized[i] = SanitizeFilename(s)
 	}
-	return dir
+	return strings.Join(sanitized, "/")
 }
 
 // FileNameNew returns the output Markdown file name for a page, matching

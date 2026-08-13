@@ -11,14 +11,11 @@ import (
 )
 
 // GetRightContent selects the real content region of a parsed export page,
-// matching legacy-cs Formatter.getRightContentByFileName. Both branches
-// select "#content" today (the other legacy-cs selectors were already
-// commented out), kept as two branches in case index pages need to diverge
-// again once this is validated against a real export.
+// matching legacy-cs Formatter.getRightContentByFileName. Index and non-index
+// pages both select "#content" today (legacy-cs's other, per-page-type
+// selectors were already commented out there); fileName is retained as the
+// seam for reintroducing that split should a real export ever need it.
 func GetRightContent(doc *goquery.Selection, fileName string) *goquery.Selection {
-	if fileName == "index.html" {
-		return doc.Find("#content")
-	}
 	return doc.Find("#content")
 }
 
