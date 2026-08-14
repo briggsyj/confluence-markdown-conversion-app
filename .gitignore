@@ -1,9 +1,16 @@
 # Local Claude Code config, not shared with the repo
 /CLAUDE.md
 
-# Go build artifacts
+# Compiled binaries and packaged apps — produced by `go build`, `fyne
+# package`, and the release CI. These are release artifacts (or built and
+# tested in the pipeline), never committed. Patterns are anchored to the
+# repo root with a leading `/` so they don't shadow the same-named source
+# packages under cmd/ (e.g. cmd/confluence-to-markdown/).
 /confluence-to-markdown
-/confluence-to-markdown-gui
+/confluence-to-markdown-*
+/*.exe
+/*.app/
+/dist/
 *.test
 
 # OS junk
