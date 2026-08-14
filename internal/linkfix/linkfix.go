@@ -218,20 +218,21 @@ var confluenceSpacePlaceholder = "%%CONFLUENCE-SPACE%%"
 
 // rewriteLinks normalizes raw Confluence URLs and malformed local links
 // into "%%CONFLUENCE_<space>_<id>%%" placeholders, then resolves every
-// placeholder matching a page in idIndex to a relative Markdown link
-// target, matching legacy-cs's combined perl pass.
+// placeholder matching a page in idIndex to a Markdown link target that is
+// relative to the referencing file's own directory.
 //
-// Two behaviors worth noting, both carried over faithfully rather than
-// "fixed": resolved paths are relative to targetDir (not to the
-// referencing file's own directory) and keep the ".md" extension - this
-// matches a comment elsewhere in legacy-cs ("gitit requires link to pages
-// without .md extension" was for a different, dead code path) suggesting
-// the tool targets a wiki engine that resolves links root-relative by
-// page path, not a plain static-site file-relative convention. And links
-// to a *different* space than this run's `space` argument are only ever
-// turned into placeholders (via the raw-URL rule, which captures the
-// space from the URL itself) but can never be resolved by idIndex (which
-// is keyed to this run's single space) - they're left as literal
+// The file-relative resolution is a deliberate divergence from legacy-cs,
+// which emitted paths relative to targetDir (the space root) instead - a
+// convention that only works in a wiki engine resolving links root-relative
+// by page path, and produces broken links in ordinary Markdown editors
+// (Typora, VS Code, Obsidian, static-site generators) that resolve a link
+// relative to the file containing it. The ".md" extension is kept, since
+// those same tools link to real files on disk.
+//
+// Links to a *different* space than this run's `space` argument are only
+// ever turned into placeholders (via the raw-URL rule, which captures the
+// space from the URL itself) but can never be resolved by idIndex (which is
+// keyed to this run's single space) - they're left as literal
 // "%%CONFLUENCE_...%%" text, matching legacy-cs's inherently
 // single-space-per-run design.
 func rewriteLinks(targetDir, space, confluenceURL string, idIndex map[string]string) error {
@@ -253,8 +254,20 @@ func rewriteLinks(targetDir, space, confluenceURL string, idIndex map[string]str
 		content = strings.ReplaceAll(content, confluenceSpacePlaceholder, space)
 		content = escapedFrontMatterDelim.ReplaceAllString(content, "---")
 
+		fromDir := filepath.Dir(f)
 		for key, relPath := range idIndex {
-			content = strings.ReplaceAll(content, "%%CONFLUENCE_"+key+"%%", "<"+relPath+">")
+			placeholder := "%%CONFLUENCE_" + key + "%%"
+			if !strings.Contains(content, placeholder) {
+				continue
+			}
+			// idIndex stores targetDir-relative slash paths; re-anchor each
+			// to the file doing the linking so the result works in a plain
+			// file-relative Markdown editor.
+			target, err := filepath.Rel(fromDir, filepath.Join(targetDir, filepath.FromSlash(relPath)))
+			if err != nil {
+				return err
+			}
+			content = strings.ReplaceAll(content, placeholder, "<"+filepath.ToSlash(target)+">")
 		}
 
 		if err := os.WriteFile(f, []byte(content), 0o644); err != nil {

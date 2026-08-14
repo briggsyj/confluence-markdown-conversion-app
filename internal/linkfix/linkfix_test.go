@@ -273,7 +273,35 @@ func TestRun_EndToEnd(t *testing.T) {
 
 	indexMD := filepath.Join(root, "index", "index.md")
 	gotIndex := read(t, indexMD)
-	if !strings.Contains(gotIndex, "[Child](<Child/Child.md>)") {
+	// index.md lives in root/index/, Child.md in root/Child/, so the link
+	// must step up out of index/ first ("../Child/Child.md") to resolve in a
+	// file-relative Markdown editor.
+	if !strings.Contains(gotIndex, "[Child](<../Child/Child.md>)") {
 		t.Errorf("expected resolved link to relocated Child.md, got:\n%s", gotIndex)
+	}
+}
+
+func TestRewriteLinks_ResolvesRelativeToReferencingFile(t *testing.T) {
+	// The referencing page and its target live in different subdirectories,
+	// so the resolved link must be relative to the referencing file's own
+	// directory ("../Target/Target.md"), not to the space root - the latter
+	// breaks in Typora and other file-relative Markdown editors.
+	root := t.TempDir()
+	confluenceURL := "https://example.atlassian.net/wiki/spaces/"
+	write(t, filepath.Join(root, "Index", "Index.md"),
+		frontMatter("111")+"\nSee [Target](https://example.atlassian.net/wiki/spaces/MYSPACE/pages/222/Target)")
+	write(t, filepath.Join(root, "Target", "Target.md"), frontMatter("222")+"\nBody")
+
+	idIndex, err := buildConfluenceIDIndex(root, "MYSPACE")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := rewriteLinks(root, "MYSPACE", confluenceURL, idIndex); err != nil {
+		t.Fatal(err)
+	}
+
+	got := read(t, filepath.Join(root, "Index", "Index.md"))
+	if !strings.Contains(got, "[Target](<../Target/Target.md>)") {
+		t.Errorf("expected link relative to referencing file, got:\n%s", got)
 	}
 }
