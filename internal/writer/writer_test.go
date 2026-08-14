@@ -25,7 +25,7 @@ func TestWrite_Page(t *testing.T) {
 		},
 	}
 
-	if err := Write(result, outDir, convert.New()); err != nil {
+	if err := Write(result, outDir, convert.New(), nil); err != nil {
 		t.Fatalf("Write: %v", err)
 	}
 
@@ -52,7 +52,7 @@ func TestWrite_IndexPage(t *testing.T) {
 		},
 	}
 
-	if err := Write(result, outDir, convert.New()); err != nil {
+	if err := Write(result, outDir, convert.New(), nil); err != nil {
 		t.Fatalf("Write: %v", err)
 	}
 
@@ -80,7 +80,7 @@ func TestWrite_PageAttachment(t *testing.T) {
 		},
 	}
 
-	if err := Write(result, outDir, convert.New()); err != nil {
+	if err := Write(result, outDir, convert.New(), nil); err != nil {
 		t.Fatalf("Write: %v", err)
 	}
 

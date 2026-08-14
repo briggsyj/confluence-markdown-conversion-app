@@ -15,6 +15,7 @@ package linkfix
 
 import (
 	"fmt"
+	"log/slog"
 	"mime"
 	"net/http"
 	"os"
@@ -36,8 +37,13 @@ type Options struct {
 }
 
 // Run performs the full post-process pass over targetDir, matching
-// legacy-cs's update-links.sh end to end.
-func Run(targetDir, space, confluenceURL string, opts Options) error {
+// legacy-cs's update-links.sh end to end. Warnings (e.g. attachments skipped
+// for exceeding the size limit) are emitted to logger; a nil logger falls
+// back to slog.Default().
+func Run(targetDir, space, confluenceURL string, opts Options, logger *slog.Logger) error {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	if err := moveRootPagesIntoDirectories(targetDir); err != nil {
 		return fmt.Errorf("moving root pages into directories: %w", err)
 	}
@@ -58,7 +64,7 @@ func Run(targetDir, space, confluenceURL string, opts Options) error {
 	}
 
 	if opts.ArticleDir {
-		if err := reorganizeAttachments(targetDir, opts.NoFileSizeLimit); err != nil {
+		if err := reorganizeAttachments(targetDir, opts.NoFileSizeLimit, logger); err != nil {
 			return fmt.Errorf("reorganizing attachments: %w", err)
 		}
 	}
@@ -287,7 +293,10 @@ func rewriteLinks(targetDir, space, confluenceURL string, idIndex map[string]str
 // literal, unescaped ")" character are the one known gap versus legacy-cs.
 var attachmentLinkPattern = regexp.MustCompile(`\]\((attachments[^)]*)\)`)
 
-func reorganizeAttachments(targetDir string, noFileSizeLimit bool) error {
+func reorganizeAttachments(targetDir string, noFileSizeLimit bool, logger *slog.Logger) error {
+	if logger == nil {
+		logger = slog.Default()
+	}
 	files, err := listMarkdownFiles(targetDir)
 	if err != nil {
 		return err
@@ -315,7 +324,7 @@ func reorganizeAttachments(targetDir string, noFileSizeLimit bool) error {
 				continue // matches legacy-cs's silent skip of a dangling reference
 			}
 			if !noFileSizeLimit && info.Size() > 10_000_000 {
-				fmt.Fprintf(os.Stderr, "WARNING: Refusing to copy attachment %q from file %q (over 10MB)\n", path, f)
+				logger.Warn("skipping attachment over 10MB", "attachment", path, "page", f, "bytes", info.Size())
 				continue
 			}
 

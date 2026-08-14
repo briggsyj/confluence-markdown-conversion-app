@@ -60,7 +60,7 @@ func runPostProcess(f *postProcessFlags, outputPath, space string) error {
 	return linkfix.Run(outputPath, space, f.confluenceURL, linkfix.Options{
 		ArticleDir:      !f.noArticleDir,
 		NoFileSizeLimit: f.noFileSizeLimit,
-	})
+	}, slog.Default())
 }
 
 // -- export subcommand ----------------------------------------------------
@@ -95,7 +95,7 @@ func exportCmd() *cobra.Command {
 			}
 			slog.Info("loaded pages from export", "count", len(result.Pages))
 
-			if err := writer.Write(result, outputPath, convert.New()); err != nil {
+			if err := writer.Write(result, outputPath, convert.New(), slog.Default()); err != nil {
 				return fmt.Errorf("writing markdown: %w", err)
 			}
 
@@ -142,7 +142,7 @@ func apiCmd() *cobra.Command {
 			}
 			slog.Info("loaded pages from API", "count", len(result.Pages))
 
-			if err := writer.Write(result, outputPath, convert.New()); err != nil {
+			if err := writer.Write(result, outputPath, convert.New(), slog.Default()); err != nil {
 				return fmt.Errorf("writing markdown: %w", err)
 			}
 

@@ -9,6 +9,7 @@ package writer
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -20,9 +21,14 @@ import (
 )
 
 // Write converts every page in result to a Markdown file under outDir and
-// copies its attachments/asset directories alongside it.
-func Write(result source.Result, outDir string, conv *convert.Converter) error {
-	for _, pg := range result.Pages {
+// copies its attachments/asset directories alongside it. Progress is logged
+// to logger (one record per page); a nil logger falls back to slog.Default().
+func Write(result source.Result, outDir string, conv *convert.Converter, logger *slog.Logger) error {
+	if logger == nil {
+		logger = slog.Default()
+	}
+	for i, pg := range result.Pages {
+		logger.Info("converting page", "n", i+1, "total", len(result.Pages), "title", pg.Title)
 		if err := writePage(pg, outDir, conv); err != nil {
 			return fmt.Errorf("writing page %q (%s): %w", pg.Title, pg.ConfluenceID, err)
 		}

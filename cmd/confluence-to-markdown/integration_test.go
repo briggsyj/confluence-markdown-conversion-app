@@ -41,10 +41,10 @@ func convertExport(t *testing.T, input string) string {
 		t.Fatalf("expected 10 pages in the Kitchen Sink export, got %d", len(result.Pages))
 	}
 
-	if err := writer.Write(result, outDir, convert.New()); err != nil {
+	if err := writer.Write(result, outDir, convert.New(), nil); err != nil {
 		t.Fatalf("Write: %v", err)
 	}
-	if err := linkfix.Run(outDir, result.RootSpace, "https://briggsyj.atlassian.net/wiki/spaces/", linkfix.Options{ArticleDir: true}); err != nil {
+	if err := linkfix.Run(outDir, result.RootSpace, "https://briggsyj.atlassian.net/wiki/spaces/", linkfix.Options{ArticleDir: true}, nil); err != nil {
 		t.Fatalf("linkfix.Run: %v", err)
 	}
 	return outDir

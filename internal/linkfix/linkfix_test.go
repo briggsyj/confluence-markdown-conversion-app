@@ -215,7 +215,7 @@ func TestReorganizeAttachments(t *testing.T) {
 	write(t, filepath.Join(root, "attachments", "123", "pic.png"), "fake-png-bytes")
 	write(t, filepath.Join(root, "My Page", "My Page.md"), "See ![img](attachments/123/pic.png)")
 
-	if err := reorganizeAttachments(root, false); err != nil {
+	if err := reorganizeAttachments(root, false, nil); err != nil {
 		t.Fatal(err)
 	}
 
@@ -234,7 +234,7 @@ func TestReorganizeAttachments_SkipsOversizedFile(t *testing.T) {
 	write(t, filepath.Join(root, "attachments", "big.bin"), big)
 	write(t, filepath.Join(root, "My Page", "My Page.md"), "See [file](attachments/big.bin)")
 
-	if err := reorganizeAttachments(root, false); err != nil {
+	if err := reorganizeAttachments(root, false, nil); err != nil {
 		t.Fatal(err)
 	}
 
@@ -257,7 +257,7 @@ func TestRun_EndToEnd(t *testing.T) {
 		frontMatter("222")+"\n# Child\n\n![diagram](attachments/222/diagram.png)")
 	write(t, filepath.Join(root, "attachments", "222", "diagram.png"), "fake-image-bytes")
 
-	err := Run(root, "MYSPACE", confluenceURL, Options{ArticleDir: true})
+	err := Run(root, "MYSPACE", confluenceURL, Options{ArticleDir: true}, nil)
 	if err != nil {
 		t.Fatalf("Run: %v", err)
 	}
