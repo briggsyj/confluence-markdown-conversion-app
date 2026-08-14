@@ -1,60 +1,40 @@
 # Confluence Markdown Conversion App
 
-Converts a Confluence space to Markdown, from a static HTML space export or the live Confluence
-Cloud REST API. Go, single binary, no runtime dependencies.
+[![Release](https://github.com/briggsyj/confluence-markdown-conversion-app/actions/workflows/release.yml/badge.svg)](https://github.com/briggsyj/confluence-markdown-conversion-app/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Install / build
+A simple desktop app that turns an exported Confluence space into a folder of Markdown files —
+drop in your export, pick where to save it, and convert.
 
-Requires Go 1.26+.
+## Download
 
-```
-go build ./cmd/confluence-to-markdown
-go build ./cmd/confluence-to-markdown-gui   # optional desktop GUI
-```
+Grab the latest version for your operating system from the
+[Releases page](https://github.com/briggsyj/confluence-markdown-conversion-app/releases/latest).
+No installation needed — just download and run it.
 
-## Usage
+## How to use it
 
-### From a Confluence HTML space export
+1. **Export your Confluence space.** In Confluence, go to your space, open **Space settings**,
+   and choose **Export space** (or visit
+   `https://<YOUR_DOMAIN>.atlassian.net/wiki/spaces/exportspacewelcome.action?key=<SPACE_KEY>`
+   directly). This downloads a `.zip` file.
+2. **Open the app** and either drag that `.zip` file onto the window or click **Browse** to
+   select it (an already-unzipped export folder works too).
+3. **Choose an output folder** — this is where the converted Markdown files will be saved.
+4. Click **Convert**. Progress and any warnings appear in the log at the bottom of the window.
 
-Download an export from `https://<YOUR_DOMAIN>.atlassian.net/wiki/spaces/exportspacewelcome.action?key=<SPACE_KEY>`.
-`--input` accepts either the `.zip` directly or an already-extracted folder.
+### Optional settings
 
-```
-confluence-to-markdown export \
-  --input path/to/export.zip \
-  --output path/to/output \
-  --confluence-url https://<YOUR_DOMAIN>.atlassian.net/wiki/spaces/
-```
-
-### From the live Confluence Cloud REST API
-
-```
-confluence-to-markdown api \
-  --site https://<YOUR_DOMAIN>.atlassian.net \
-  --email you@example.com \
-  --api-token <your Atlassian API token> \
-  --space <SPACE_KEY> \
-  --output path/to/output
-```
-
-### GUI
-
-`confluence-to-markdown-gui` is a drag-and-drop window for the export flow: drop a `.zip` or
-extracted folder, pick an output directory, and convert.
-
-### Options
-
-Both subcommands share these post-processing flags:
-
-| flag | description |
+| Setting | What it does |
 | --- | --- |
-| `--post-process` | rewrite internal links and reorganize attachments after conversion (default on) |
-| `--no-article-dir` | don't move each page into its own `<Title>/<Title>.md` directory |
-| `--no-file-size-limit` | don't skip attachments over 10MB |
-
-Run `confluence-to-markdown export --help` / `api --help` for the full flag list.
+| Confluence space URL | If your pages link to each other using full Confluence URLs (e.g. `https://acme.atlassian.net/wiki/spaces/TEAM/pages/12345/Some+Page`), set this to your space's URL prefix so those links get rewritten to point at the converted Markdown files instead — for that example it would be `https://acme.atlassian.net/wiki/spaces/`. Leave it blank if you're not sure. |
+| Rewrite internal links and reorganize attachments | Turns Confluence page links into working links between your new Markdown files, and tidies up attachments. On by default — recommended. |
+| Move each page to its own `/Title/` directory | Puts every page in its own folder alongside its attachments, instead of one flat pile of files. |
+| Skip attachments over 10MB | Avoids pulling in oversized files. On by default. |
 
 ## Development
+
+Requires Go 1.26+.
 
 ```
 go build ./...
@@ -63,7 +43,7 @@ go test ./...
 ```
 
 `testdata/kitchen-sink-export/` is a real Confluence Cloud export used by the integration tests
-in `cmd/confluence-to-markdown/`.
+in `cmd/confluence-to-markdown-gui/`.
 
 ## Credits
 
