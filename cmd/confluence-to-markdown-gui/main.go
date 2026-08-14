@@ -26,7 +26,7 @@ import (
 
 func main() {
 	a := app.NewWithID("dev.briggsyj.confluence-to-markdown-gui")
-	w := a.NewWindow("Confluence to Markdown")
+	w := a.NewWindow("Confluence Markdown Conversion App")
 	w.Resize(fyne.NewSize(560, 420))
 
 	inputEntry := widget.NewEntry()

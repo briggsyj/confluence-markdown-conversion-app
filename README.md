@@ -1,4 +1,4 @@
-# Confluence to Markdown
+# Confluence Markdown Conversion App
 
 Converts a Confluence space to Markdown, from a static HTML space export or the live Confluence
 Cloud REST API. Go, single binary, no runtime dependencies.
