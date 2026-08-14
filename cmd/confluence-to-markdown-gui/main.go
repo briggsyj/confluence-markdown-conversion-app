@@ -2,9 +2,6 @@
 // export-source conversion flow: drop a Confluence HTML space export
 // (either the raw .zip or an already-extracted folder) onto the window, or
 // browse for one, pick an output directory, adjust options, and convert.
-//
-// This wraps the same internal packages the CLI (confluence-to-markdown
-// export) uses - it's a thin UI layer, not a separate implementation.
 package main
 
 import (
@@ -17,7 +14,9 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/storage"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/briggsyj/confluence-to-markdown/internal/convert"
@@ -26,10 +25,24 @@ import (
 	"github.com/briggsyj/confluence-to-markdown/internal/writer"
 )
 
+// Spacing follows an 8pt grid (https://m3.material.io/foundations/layout):
+// generous space at the window edge, a smaller consistent gap between
+// sibling sections, and the theme's own (smaller still) padding within a
+// section's own controls.
+const (
+	windowPadding  = 16 // between the window edge and its content
+	sectionSpacing = 12 // between sibling cards/sections
+)
+
 func main() {
 	a := app.NewWithID("dev.briggsyj.confluence-to-markdown-gui")
 	w := a.NewWindow("Confluence Markdown Conversion App")
-	w.Resize(fyne.NewSize(620, 660))
+	w.Resize(fyne.NewSize(760, 820))
+	w.CenterOnScreen()
+
+	subtitle := widget.NewLabel("Convert a Confluence space export into a folder of Markdown files.")
+	subtitle.Alignment = fyne.TextAlignCenter
+	subtitle.TextStyle = fyne.TextStyle{Italic: true}
 
 	inputEntry := widget.NewEntry()
 	inputEntry.SetPlaceHolder("Drop a Confluence export .zip or folder here, or browse...")
@@ -60,6 +73,7 @@ func main() {
 
 	status := widget.NewLabel("")
 	status.Wrapping = fyne.TextWrapWord
+	status.Alignment = fyne.TextAlignCenter
 
 	progress := widget.NewProgressBarInfinite()
 	progress.Hide()
@@ -84,7 +98,7 @@ func main() {
 	}
 	logger := slog.New(guiLogHandler{sink: appendLog})
 
-	browseZip := widget.NewButton("Browse Zip...", func() {
+	browseZip := widget.NewButtonWithIcon("Browse Zip...", theme.FileIcon(), func() {
 		d := dialog.NewFileOpen(func(r fyne.URIReadCloser, err error) {
 			if err != nil || r == nil {
 				return
@@ -96,7 +110,7 @@ func main() {
 		d.Show()
 	})
 
-	browseFolder := widget.NewButton("Browse Folder...", func() {
+	browseFolder := widget.NewButtonWithIcon("Browse Folder...", theme.FolderOpenIcon(), func() {
 		dialog.ShowFolderOpen(func(u fyne.ListableURI, err error) {
 			if err != nil || u == nil {
 				return
@@ -105,7 +119,7 @@ func main() {
 		}, w)
 	})
 
-	browseOutput := widget.NewButton("Browse...", func() {
+	browseOutput := widget.NewButtonWithIcon("Browse...", theme.FolderOpenIcon(), func() {
 		dialog.ShowFolderOpen(func(u fyne.ListableURI, err error) {
 			if err != nil || u == nil {
 				return
@@ -115,7 +129,7 @@ func main() {
 	})
 
 	var convertBtn *widget.Button
-	convertBtn = widget.NewButton("Convert", func() {
+	convertBtn = widget.NewButtonWithIcon("Convert", theme.ConfirmIcon(), func() {
 		input := inputEntry.Text
 		output := outputEntry.Text
 		if input == "" || output == "" {
@@ -153,6 +167,7 @@ func main() {
 			})
 		}()
 	})
+	convertBtn.Importance = widget.HighImportance
 
 	w.SetOnDropped(func(_ fyne.Position, uris []fyne.URI) {
 		if len(uris) == 0 {
@@ -161,27 +176,43 @@ func main() {
 		inputEntry.SetText(uris[0].Path())
 	})
 
-	controls := container.NewVBox(
-		widget.NewLabelWithStyle("Input export", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-		container.NewBorder(nil, nil, nil, container.NewHBox(browseZip, browseFolder), inputEntry),
-		widget.NewLabelWithStyle("Output directory", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-		container.NewBorder(nil, nil, nil, browseOutput, outputEntry),
-		widget.NewLabelWithStyle("Options", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
-		widget.NewLabel("Confluence space URL (optional)"),
-		confluenceURLEntry,
-		confluenceURLHelp,
-		postProcessCheck,
-		articleDirCheck,
-		skipLargeCheck,
-		convertBtn,
+	inputCard := widget.NewCard("Input export", "A Confluence export .zip or an already-extracted folder",
+		container.NewBorder(nil, nil, nil, container.NewHBox(browseZip, browseFolder), inputEntry))
+
+	outputCard := widget.NewCard("Output directory", "Where the converted Markdown files are written",
+		container.NewBorder(nil, nil, nil, browseOutput, outputEntry))
+
+	optionsCard := widget.NewCard("Options", "",
+		container.New(layout.NewCustomPaddedVBoxLayout(sectionSpacing/2),
+			widget.NewLabel("Confluence space URL (optional)"),
+			confluenceURLEntry,
+			confluenceURLHelp,
+			widget.NewSeparator(),
+			postProcessCheck,
+			articleDirCheck,
+			skipLargeCheck,
+		))
+
+	actions := container.New(layout.NewCustomPaddedVBoxLayout(sectionSpacing/2),
+		container.NewCenter(convertBtn),
 		progress,
 		status,
-		widget.NewLabelWithStyle("Log", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
 	)
 
-	// Border layout so the log panel expands to fill the remaining space
-	// below the fixed-height controls.
-	w.SetContent(container.NewPadded(container.NewBorder(controls, nil, nil, nil, logScroll)))
+	logCard := widget.NewCard("Log", "", logScroll)
+
+	form := container.New(layout.NewCustomPaddedVBoxLayout(sectionSpacing),
+		subtitle,
+		inputCard,
+		outputCard,
+		optionsCard,
+		actions,
+	)
+
+	content := container.NewBorder(form, nil, nil, nil, logCard)
+	padded := container.New(layout.NewCustomPaddedLayout(windowPadding, windowPadding, windowPadding, windowPadding), content)
+
+	w.SetContent(padded)
 	w.ShowAndRun()
 }
 
@@ -194,9 +225,8 @@ type runOptions struct {
 	noFileSizeLimit bool
 }
 
-// runConversion runs the same export -> convert -> write -> link-fix
-// pipeline as "confluence-to-markdown export", logging progress to logger
-// and returning the number of pages converted.
+// runConversion runs the export -> convert -> write -> link-fix pipeline,
+// logging progress to logger and returning the number of pages converted.
 func runConversion(opts runOptions, logger *slog.Logger) (int, error) {
 	ctx := context.Background()
 
