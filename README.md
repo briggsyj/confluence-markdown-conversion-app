@@ -1,14 +1,11 @@
 # confluence-to-markdown
 
-Converts a Confluence space to Markdown, either from a static HTML space export or by pulling
-live from the Confluence Cloud REST API. A Go rewrite of the original CoffeeScript/Node tool,
-built for single-binary distribution and mature, actively-maintained dependencies.
-
-## Requirements
-
-Go 1.26+.
+Converts a Confluence space to Markdown, from a static HTML space export or the live Confluence
+Cloud REST API. Go, single binary, no runtime dependencies.
 
 ## Install / build
+
+Requires Go 1.26+.
 
 ```
 go build ./cmd/confluence-to-markdown
@@ -19,8 +16,8 @@ go build ./cmd/confluence-to-markdown-gui   # optional desktop GUI
 
 ### From a Confluence HTML space export
 
-Download an export via `https://<YOUR_DOMAIN>.atlassian.net/wiki/spaces/exportspacewelcome.action?key=<SPACE_KEY>`.
-The `--input` flag accepts either the downloaded `.zip` directly or an already-extracted folder.
+Download an export from `https://<YOUR_DOMAIN>.atlassian.net/wiki/spaces/exportspacewelcome.action?key=<SPACE_KEY>`.
+`--input` accepts either the `.zip` directly or an already-extracted folder.
 
 ```
 confluence-to-markdown export \
@@ -42,12 +39,12 @@ confluence-to-markdown api \
 
 ### GUI
 
-`confluence-to-markdown-gui` gives a drag-and-drop window for the export flow: drop a `.zip` or
+`confluence-to-markdown-gui` is a drag-and-drop window for the export flow: drop a `.zip` or
 extracted folder, pick an output directory, and convert.
 
 ### Options
 
-Both subcommands share post-processing flags:
+Both subcommands share these post-processing flags:
 
 | flag | description |
 | --- | --- |
@@ -65,16 +62,11 @@ go vet ./...
 go test ./...
 ```
 
-`testdata/kitchen-sink-export/` holds a real Confluence Cloud export (zipped and pre-extracted)
-used by the integration tests in `cmd/confluence-to-markdown/`.
+`testdata/kitchen-sink-export/` is a real Confluence Cloud export used by the integration tests
+in `cmd/confluence-to-markdown/`.
 
-## Recognition
+## Credits
 
-### Original project and packages
-
-Eric White / Meridus for the original [Confluence to Markdown](https://github.com/meridius/confluence-to-markdown)
-(the CoffeeScript/Node tool this project began as a rewrite of).
-
-### Current maintenance
-
-John Briggs [briggsyj](https://github.com/briggsyj)
+Original CoffeeScript/Node tool: Eric White / Meridus,
+[meridius/confluence-to-markdown](https://github.com/meridius/confluence-to-markdown).
+Go rewrite and current maintenance: John Briggs, [briggsyj](https://github.com/briggsyj).
