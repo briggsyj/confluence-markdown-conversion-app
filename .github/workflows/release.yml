@@ -19,6 +19,7 @@ jobs:
     name: Build GUI (${{ matrix.goos }}/${{ matrix.goarch }})
     runs-on: ${{ matrix.runner }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - runner: ubuntu-latest
@@ -48,7 +49,7 @@ jobs:
 
       - name: Install Linux graphics headers
         if: matrix.goos == 'linux'
-        run: sudo apt-get update && sudo apt-get install -y gcc libgl1-mesa-dev xorg-dev
+        run: sudo apt-get update && sudo apt-get install -y gcc libgl1-mesa-dev xorg-dev libwayland-dev libxkbcommon-dev
 
       - name: Install Windows C toolchain
         if: matrix.goos == 'windows'

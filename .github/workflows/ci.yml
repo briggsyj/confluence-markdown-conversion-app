@@ -25,7 +25,7 @@ jobs:
           go-version-file: go.mod
 
       - name: Install Linux graphics headers
-        run: sudo apt-get update && sudo apt-get install -y gcc libgl1-mesa-dev xorg-dev
+        run: sudo apt-get update && sudo apt-get install -y gcc libgl1-mesa-dev xorg-dev libwayland-dev libxkbcommon-dev
 
       - name: Vet
         run: go vet ./...
